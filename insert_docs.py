@@ -154,7 +154,7 @@ def extract_section_info(chunk: str) -> Dict[str, Any]:
 
 def main():
     parser = argparse.ArgumentParser(description="Insert crawled docs into ChromaDB")
-    parser.add_argument("url", help="URL to crawl (regular, .txt, or sitemap)")
+    #parser.add_argument("url", help="URL to crawl (regular, .txt, or sitemap)")
     parser.add_argument("--collection", default="docs", help="ChromaDB collection name")
     parser.add_argument("--db-dir", default="./chroma_db", help="ChromaDB directory")
     parser.add_argument("--embedding-model", default="all-MiniLM-L6-v2", help="Embedding model name")
@@ -170,7 +170,7 @@ def main():
     # args.url = "reelvendornetwork.com"
 
     # Detect URL type
-    url = args.url
+    url = "https://reelvendornetwork.com"
     if is_txt(url):
         print(f"Detected .txt/markdown file: {url}")
         crawl_results = asyncio.run(crawl_markdown_file(url))
