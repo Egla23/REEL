@@ -97,7 +97,6 @@ def add_documents_to_collection(
             metadatas=metadatas[start_idx:end_idx],
         )
 
-
 def query_collection(
     collection: chromadb.Collection,
     query_text: str,
