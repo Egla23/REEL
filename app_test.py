@@ -1,10 +1,6 @@
-'''
-FRONTEND
-streamlit run app.py
-'''
-
 import streamlit as st
-from bot import SYSTEM_INSTRUCTION, MODEL, generate_response
+from datetime import date
+from bot import SYSTEM_INSTRUCTION, MODEL, generate_response # Keeping your imports
 
 # Helper function to display results
 def show_parts(response):
@@ -36,58 +32,77 @@ with st.sidebar:
     st.header("💍 Wedding Details")
     with st.form("wedding_criteria"):
         st.subheader("Basics")
-        wedding_date = st.date_input("Wedding Date")
+        
+        # 1. Date Limitation: Set min_value to today
+        wedding_date = st.date_input("Wedding Date", min_value=date.today())
+        
         location = st.text_input("Location or Venue", placeholder="e.g. Newport, RI")
-        guest_count = st.number_input("Estimated Guest Count", min_value=0, step=10)
+        
+        # 2. Guest Range Dropdown
+        guest_range = st.selectbox("Estimated Guest Count", [
+            "Micro (Under 20)", 
+            "Small (20-75)", 
+            "Medium (75-150)", 
+            "Large (150-300)", 
+            "Grand (300+)"
+        ])
+        
         setting = st.selectbox("Setting", ["Indoor", "Outdoor", "Both"])
 
         st.subheader("Vendor Needs")
-        vendors_needed = st.multiselect("Vendors Needed", ["Video", "Photo", "DJ", "Florist", "Planner", "Catering", "Hair/Makeup"])
-        vendor_count = st.radio("Number of Vendors", ["One vendor", "Multiple vendors"])
+        # 3. Expanded Vendor List
+        vendor_options = [
+            "Venue", "Video", "Photo", "DJ", "Band", "Florist", 
+            "Planner", "Catering", "Hair/Makeup", "Transportation", 
+            "Officiant", "Rentals", "Cake/Dessert"
+        ]
+        vendors_needed = st.multiselect("Vendors Needed", vendor_options)
+        
+        # 4. Number of Vendors (Refined)
+        vendor_count_pref = st.select_slider(
+            "Searching for:", 
+            options=["Single Vendor", "Small Team", "Full Vendor Squad"]
+        )
 
         st.subheader("Style & Vision")
         style = st.text_input("Style/Theme", placeholder="e.g. Coastal, Vintage")
-        palette = st.text_input("Color Palette")
-        vibe = st.select_slider("Overall Vibe", options=["Modern", "Romantic", "Cinematic", "Fun", "Luxury"])
+        
+        # 5. More Effective Vibe Selection (Multiselect allows for nuance)
+        vibe_tags = st.multiselect(
+            "Overall Vibe (Select all that apply)",
+            ["Modern", "Romantic", "Cinematic", "Fun", "Luxury", "Boho", "Classic", "Edgy"]
+        )
 
         st.subheader("Budget & Priorities")
         budget = st.text_input("Budget range per vendor")
         priority = st.text_input("Top priority vendors")
 
-        st.subheader("Preferences")
-        personality = st.radio("Vendor Personality Fit", ["Very Important", "Somewhat Important", "Not a Priority"])
-        content_style = st.multiselect("Content Style", ["Cinematic", "Documentary", "Social Media Style", "Short Form"])
-        delivery_speed = st.selectbox("Turnaround Time", ["Standard", "Same day/Next day"])
-
-        st.subheader("Timing & Notes")
-        booking_status = st.radio("Booking Status", ["Just browsing", "Ready to book"])
+        # ... (rest of your existing fields)
         notes = st.text_area("Special Requests / Deal Breakers")
 
-        # Submit button for the form
         submit_button = st.form_submit_button("Find My Vendors")
 
 # --- PROCESSING ---
 if submit_button:
-    # Constructing the complex query
+    # 6. Formatting the Output (The "Anti-Essay" Prompt)
     query = f"""
-    site:reelvendornetwork.com 
-    Using the information from the Reel Vendor Network website (site:reelvendornetwork.com), 
-    help find vendors for the following wedding:
+    SEARCH SITE: reelvendornetwork.com 
     
+    USER WEDDING PROFILE:
     - Date: {wedding_date}
     - Location: {location}
-    - Guests: {guest_count}
-    - Setting: {setting}
-    - Vendors Needed: {', '.join(vendors_needed)} ({vendor_count})
-    - Style/Vibe: {style}, {palette} color palette, with a {vibe} vibe.
+    - Guest Size: {guest_range}
+    - Vendors Needed: {', '.join(vendors_needed)}
+    - Style/Vibe: {style} ({', '.join(vibe_tags)})
     - Priorities: {priority} (Budget: {budget})
-    - Preferences: {personality} personality fit, focusing on {', '.join(content_style)} content.
-    - Delivery: {delivery_speed}
-    - Current Status: {booking_status}
-    - Additional Notes: {notes}
+    - Notes: {notes}
 
-    If you cannot find specific vendors on the website that match these criteria, 
-    Say that they are not available on reelvendornetwork.com and provide one relevant suggestion from reelvendornetwork.com
+    INSTRUCTIONS:
+    1. Provide a Bulleted List of recommended vendors found on reelvendornetwork.com.
+    2. For each vendor, include: **Vendor Name**, **Category**, and a **1-sentence 'Why they fit'**.
+    3. DO NOT write a long introduction or a concluding essay. 
+    4. If no specific match is found, list one 'Featured Vendor' from the site that most closely aligns with the {style} style.
+    5. Use Markdown tables or bold headers for readability.
     """
 
     try:
