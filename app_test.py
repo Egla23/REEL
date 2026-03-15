@@ -40,29 +40,38 @@ with st.sidebar:
         
         # 2. Guest Range Dropdown
         guest_range = st.selectbox("Estimated Guest Count", [
-            "Micro (Under 20)", 
-            "Small (20-75)", 
-            "Medium (75-150)", 
-            "Large (150-300)", 
-            "Grand (300+)"
+            "0-50", 
+            "50-100", 
+            "100-150", 
+            "150+", 
         ])
         
         setting = st.selectbox("Setting", ["Indoor", "Outdoor", "Both"])
 
         st.subheader("Vendor Needs")
         # 3. Expanded Vendor List
-        vendor_options = [
-            "Venue", "Video", "Photo", "DJ", "Band", "Florist", 
-            "Planner", "Catering", "Hair/Makeup", "Transportation", 
-            "Officiant", "Rentals", "Cake/Dessert"
+        vendor_options = [ 
+            
+                "Venue","Photographer","Videographer","DJ","Band",
+                "Florist","Planner", "Hair and Makeup", "Cakes and Desserts",
+                "Transportation","Caterer","Dance Lessons","Jeweler",
+                "Gowns/Tuxes","Decor","Officiant","Rentals","Photo Booth",
+                "Instrumentalist", "Invitations and Stationery",
+                "Artist","Lodging","Med Spa",
+                "Realtor","Celebration Spot","Travel Agent",
+                "Wedding Experience","Favor" 
         ]
-        vendors_needed = st.multiselect("Vendors Needed", vendor_options)
+        
+ 
+        
+        vendors_needed = st.multiselect(
+         "Vendors Needed",  
+         options=vendor_options, 
+         max_selections=5  
+        )
         
         # 4. Number of Vendors (Refined)
-        vendor_count_pref = st.select_slider(
-            "Searching for:", 
-            options=["Single Vendor", "Small Team", "Full Vendor Squad"]
-        )
+        vendor_count = st.radio("Number of Vendors", ["One vendor", "Multiple vendors"])
 
         st.subheader("Style & Vision")
         style = st.text_input("Style/Theme", placeholder="e.g. Coastal, Vintage")
