@@ -1,0 +1,108 @@
+
+/* --- 0. SIDEBAR WIDTH --- */
+[data-testid="stSidebar"] {
+    /* Adjust these numbers to squish or expand */
+    min-width: 325px !important;
+    max-width: 325px !important;
+}
+
+/* --- SIDEBAR TYPOGRAPHY --- */
+
+/* Target st.header() in the sidebar */
+[data-testid="stSidebar"] h2 {
+    font-size: 1.8rem !important; /* Standard is usually ~1.25rem */
+    font-weight: 700 !important;
+    margin-bottom: 0.5rem !important;
+    color: #ffffff !important; 
+}
+
+/* Target st.subheader() in the sidebar */
+[data-testid="stSidebar"] h3 {
+    font-size: 1.3rem !important; /* Standard is usually ~1.1rem */
+    font-weight: 500 !important;
+    margin-top: 1.2rem !important;
+    margin-bottom: 0.3rem !important;
+    color: #ffffff !important;
+}
+
+/* Target the smaller Widget Labels */
+[data-testid="stSidebar"] label p {
+    font-size: 1rem !important;
+    font-weight: 400 !important;
+}
+
+/* --- WIDGET TEXT COLOR --- */
+/* :hover and :focus to keep color when interacting */
+.stTextInput input, .stTextInput input:hover, .stTextInput input:focus,
+.stTextArea textarea, .stTextArea textarea:hover, .stTextArea textarea:focus,
+.stDateInput input, .stDateInput input:hover, .stDateInput input:focus,
+.stSelectbox [data-baseweb="select"] div,
+.stMultiSelect [data-baseweb="select"] div,
+[data-baseweb="popover"] li {
+    color: #2e2e2e !important;
+    caret-color: #2e2e2e !important; /* Keeps cursor consistent */
+}
+
+/* --- WIDGET PLACEHOLDER TEXT COLOR --- */
+.stTextInput input::placeholder, 
+.stTextArea textarea::placeholder, 
+.stDateInput input::placeholder {
+    color: #2e2e2e !important;
+    opacity: 0.5 !important;
+}
+
+/* Selectbox & Multiselect Placeholders */
+/* This targets the text area specifically when it's in the 'placeholder' state */
+.stSelectbox [data-baseweb="select"] > div:first-child,
+.stMultiSelect [data-baseweb="select"] > div:first-child {
+    color: #948f8d !important;
+}
+
+/* --- CALENDAR POPUP STYLING --- */
+
+[data-baseweb="calendar"] [role="gridcell"]:not([aria-disabled="true"]) div {
+    color: #2e2e2e !important;
+    opacity: 1 !important;
+}
+
+/* Selected Day Color */
+[data-baseweb="calendar"] [aria-selected="true"] {
+    background-color: #da9982 !important;
+    color: #ffffff !important;
+}
+            
+/* --- THE BUTTON --- */
+/* Target the form submit button specifically to force the background fill */
+div.stFormSubmitButton > button {
+    background-color: #da9982 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+    width: 100%;
+    border-radius: 999px !important;
+}
+
+/* Button Interactive effect  */
+div.stFormSubmitButton > button:hover {
+    background-color: #ffffff !important;
+    border-color: #da9982 !important;
+    color: #da9982 !important;
+}
+
+/* --- LOGO SIZE ADJUSTMENT --- */
+[data-testid="stLogo"] {
+    /* Increase the container height (Default is ~24px to 32px) */
+    height: 80px !important; 
+    
+    /* Ensure the container can actually expand vertically */
+    display: flex !important;
+    align-items: center !important;
+}
+
+[data-testid="stLogo"] img {
+    /* Scale the image up */
+    height: 60px !important; /* Adjust this to your liking */
+    width: auto !important;  /* Keep the aspect ratio perfect */
+    
+    /* If you want it to fill the width of your 'squished' sidebar: */
+    /* max-width: 90% !important; */
+}

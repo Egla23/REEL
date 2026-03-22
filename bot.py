@@ -36,11 +36,13 @@ def generate_response(query: str):
         config=GenerateContentConfig(
             tools=tools,
             system_instruction=SYSTEM_INSTRUCTION,
+            thinking_config=types.ThinkingConfig(
+                include_thoughts=False
+            )
         )
     )            
     response = chat.send_message(query)
     return response
-
 # # For verification, you can inspect the metadata to see which URLs the model retrieved
 # if response.candidates[0].grounding_metadata:
 #     print("\n--- Search Sources ---")
