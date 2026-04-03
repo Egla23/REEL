@@ -82,10 +82,10 @@ with st.sidebar:
             ["Modern", "Romantic", "Cinematic", "Fun", "Luxury", "Classic", "Edgy"]
         )
         
-        st.subheader("Inspiration Photos")
+        # st.subheader("Inspiration Photos")
 
         uploaded_pictures = st.file_uploader(
-            "Upload inspiration pictures",
+            "Inspiration Photos",
             type=["png", "jpg", "jpeg", "webp"],
             accept_multiple_files=True,
             help="Upload wedding inspiration photos to help guide the vendor search."
@@ -134,7 +134,7 @@ if submit_button:
     print("\n",query)
     try:
         with st.spinner(f"Searching {selected_category} options at Reel Vendor Network..."):
-            response = generate_response(query)
+            response = generate_response(query,uploaded_pictures)
             st.markdown(f"See more {selected_category}s at {target_link}")
             show_parts(response)
     except Exception as e:

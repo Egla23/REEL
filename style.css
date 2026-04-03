@@ -103,7 +103,7 @@ div.stFormSubmitButton > button:hover {
     height: 60px !important; /* Adjust this to your liking */
     width: auto !important;  /* Keep the aspect ratio perfect */
     
-    /* If you want it to fill the width of your 'squished' sidebar: */
+    /* If you want it to fill the width of your sidebar: */
     /* max-width: 90% !important; */
 }
 
@@ -120,3 +120,81 @@ span[data-baseweb="tag"] svg,
     fill: #da9982 !important;
     color: #da9982 !important;
 }
+
+/* --- IMAGE / FILE UPLOADER STYLING --- */
+
+/* 1. Target the main dropzone container (the 'section' tag) */
+[data-testid="stFileUploader"] section {
+    border: 2px dashed #da9982 !important;
+    background-color: #faefec !important;
+    border-radius: 10px !important;
+}
+
+/* Target the label text above the uploader */
+[data-testid="stFileUploader"] > label,
+[data-testid="stFileUploader"] > label p,
+[data-testid="stFileUploader"] > label div {
+    color: #ffffff !important;
+}
+
+/* 2. Target ALL text inside the uploader ("Drag and drop...", limits, etc.) */
+[data-testid="stFileUploader"] div,
+[data-testid="stFileUploader"] p,
+[data-testid="stFileUploader"] span,
+[data-testid="stFileUploader"] small {
+    color: #2e2e2e !important;
+}
+
+/* 3. Target the upload icon */
+[data-testid="stFileUploader"] svg {
+    fill: #da9982 !important;
+    color: #da9982 !important;
+}
+
+/* 4. Target the "Browse files" button to match your Form Submit Button */
+[data-testid="stFileUploader"] button {
+    background-color: #235059 !important;
+    color: #ffffff !important;
+    border: 2px solid #235059 !important;
+    border-radius: 999px !important; /* Pill shape */
+    padding: 0.25rem 1rem !important;
+}
+
+/* 4b. Force the text inside the button to be a color */
+[data-testid="stFileUploader"] button span,
+[data-testid="stFileUploader"] button p {
+    color: #235059 !important;
+}
+
+/* 5. Hover effect for the "Browse files" button */
+[data-testid="stFileUploader"] button:hover {
+    background-color: #faefec !important;
+    border-color: #235059 !important;
+    color: #235059 !important;
+}
+
+/* 5b. Force the text inside the button to change color on hover */
+[data-testid="stFileUploader"] button:hover span,
+[data-testid="stFileUploader"] button:hover p {
+    color: #235059!important;
+}
+
+/* --- TOOLTIP / HELP TEXT STYLING --- */
+
+/* Target the tooltip container and all text inside it */
+[data-testid="stTooltipContent"],
+[data-testid="stTooltipContent"] div,
+[data-testid="stTooltipContent"] p,
+[data-testid="stTooltipContent"] span,
+div[data-baseweb="tooltip"] {
+    color: #2e2e2e !important;
+}
+
+/* Optional: If we also want to change the tooltip background color 
+   to match your theme better, you can uncomment this below: */
+/*
+[data-testid="stTooltipContent"] {
+    background-color: #ffffff !important;
+    border: 1px solid #da9982 !important;
+}
+*/

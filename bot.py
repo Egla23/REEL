@@ -31,8 +31,8 @@ tools = [
     {"url_context": {}},
 ]
 
-def generate_response(query: str, image_path: str = None):
-
+# Update the function signature to accept a list of images
+def generate_response(query: str, images: list = None):
     chat = client.chats.create(
         model=MODEL, 
         config=types.GenerateContentConfig(
@@ -41,18 +41,21 @@ def generate_response(query: str, image_path: str = None):
         )
     )
 
-    # Prepare the content list starting with the text query
+    # Start with the text query
     content_list = [query]
 
-    # If an image path is provided, load it and add to the list
-    if image_path:
-        img = Image.open(image_path)
-        content_list.append(img)
+    # If images exist, open them and append them to the list
+    if images:
+        for uploaded_file in images:
+            # Open the Byte stream as a PIL Image object
+            img = Image.open(uploaded_file)
+            content_list.append(img)
 
-    # Send the list (text + image) to the model
+    # Send the list (contains 1 string and N images)
     response = chat.send_message(message=content_list)
     
     return response
+
 # # For verification, you can inspect the metadata to see which URLs the model retrieved
 # if response.candidates[0].grounding_metadata:
 #     print("\n--- Search Sources ---")
