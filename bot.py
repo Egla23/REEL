@@ -52,7 +52,7 @@ def generate_response(query: str, image_path: str = None):
     # Send the list (text + image) to the model
     response = chat.send_message(message=content_list)
     
-    return response.text
+    return response
 # # For verification, you can inspect the metadata to see which URLs the model retrieved
 # if response.candidates[0].grounding_metadata:
 #     print("\n--- Search Sources ---")
