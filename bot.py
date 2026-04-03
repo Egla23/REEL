@@ -6,6 +6,7 @@ import os
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from PIL import Image
 
 # Load environment variables
 load_dotenv()
@@ -30,19 +31,28 @@ tools = [
     {"url_context": {}},
 ]
 
-def generate_response(query: str):
+def generate_response(query: str, image_path: str = None):
+
     chat = client.chats.create(
         model=MODEL, 
-        config=GenerateContentConfig(
+        config=types.GenerateContentConfig(
             tools=tools,
             system_instruction=SYSTEM_INSTRUCTION,
-            thinking_config=types.ThinkingConfig(
-                include_thoughts=False
-            )
         )
-    )            
-    response = chat.send_message(query)
-    return response
+    )
+
+    # Prepare the content list starting with the text query
+    content_list = [query]
+
+    # If an image path is provided, load it and add to the list
+    if image_path:
+        img = Image.open(image_path)
+        content_list.append(img)
+
+    # Send the list (text + image) to the model
+    response = chat.send_message(message=content_list)
+    
+    return response.text
 # # For verification, you can inspect the metadata to see which URLs the model retrieved
 # if response.candidates[0].grounding_metadata:
 #     print("\n--- Search Sources ---")
