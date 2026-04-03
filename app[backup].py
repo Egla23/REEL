@@ -115,10 +115,7 @@ if submit_button:
     1. Provide 3 reccomended vendors from {selected_category}s found at {target_link}.
     2. For each, include: **Vendor Name**, **Summary**, and a **'Why they fit'** section.
     3. Keep it concise. Use Markdown headers for readability.
-    4. Provide a link on from the reel vendor page for each vendor. 
-    For example, if you are given a link like https://reelvendornetwork.com/djs/, 
-    your suggested link to the vendor would include the vendor name in kebab-case:
-    https://reelvendornetwork.com/djs/dawson-entertainment, this would work for all vendors.
+    4. Provide a link on from the reel vendor page for each vendor.
     """
     print("\n",query)
     try:
