@@ -121,7 +121,7 @@ if submit_button:
     try:
         with st.spinner(f"Searching {selected_category} options at Reel Vendor Network..."):
             response = generate_response(query)
-            print(f"See more {selected_category}s at {target_link}")
+            st.markdown(f"See more {selected_category}s at {target_link}")
             show_parts(response)
     except Exception as e:
         st.error(f"An error occurred: {e}")
