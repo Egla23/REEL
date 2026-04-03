@@ -81,6 +81,20 @@ with st.sidebar:
             "Overall Vibe",
             ["Modern", "Romantic", "Cinematic", "Fun", "Luxury", "Classic", "Edgy"]
         )
+        
+        st.subheader("Inspiration Photos")
+
+        uploaded_pictures = st.file_uploader(
+            "Upload inspiration pictures",
+            type=["png", "jpg", "jpeg", "webp"],
+            accept_multiple_files=True,
+            help="Upload wedding inspiration photos to help guide the vendor search."
+        )
+
+        if uploaded_pictures:
+            st.write("Preview:")
+            for img in uploaded_pictures:
+                st.image(img, caption=img.name, use_container_width=True)
 
         st.subheader("Budget & Priorities")
 
