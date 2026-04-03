@@ -2,9 +2,6 @@ import streamlit as st
 import pandas as pd # Added for CSV handling
 from datetime import date
 from bot import SYSTEM_INSTRUCTION, MODEL, generate_response 
-import streamlit as st
-
-import streamlit as st
 
 def local_css(file_name):
     with open(file_name) as f:

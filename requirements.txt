@@ -1,0 +1,4 @@
+google-genai 
+python-dotenv 
+streamlit
+# Python 3.11

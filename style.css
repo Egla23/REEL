@@ -106,3 +106,17 @@ div.stFormSubmitButton > button:hover {
     /* If you want it to fill the width of your 'squished' sidebar: */
     /* max-width: 90% !important; */
 }
+
+/* --- WIDGET ICONS (Arrow & X) --- */
+
+/* Targets the dropdown arrows in Selectbox, MultiSelect, and DateInput */
+div[data-baseweb="select"] svg, 
+/* Targets the 'X' clear buttons for single and multi-selects */
+button[data-baseweb="button"] svg,
+/* Targets the 'X' inside individual MultiSelect tags */
+span[data-baseweb="tag"] svg,
+/* Catch-all for other widget icons */
+[data-baseweb="icon"] svg {
+    fill: #da9982 !important;
+    color: #da9982 !important;
+}

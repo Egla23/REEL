@@ -1,7 +1,7 @@
 ### --------------
 from google import genai
 from google.genai.types import Tool, GenerateContentConfig
-
+from google.genai import types
 import os
 from dotenv import load_dotenv
 from google import genai
