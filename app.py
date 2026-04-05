@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd # Added for CSV handling
 from datetime import date
 from bot import SYSTEM_INSTRUCTION, MODEL, generate_response 
+import re
 
 def local_css(file_name):
     with open(file_name) as f:
@@ -29,20 +30,35 @@ def load_vendor_data():
         df = pd.read_csv("links.csv")
         return df
     except FileNotFoundError:
-        return pd.DataFrame({"Category": ["Venue"], "URL": ["https://reelvendornetwork.com/venues/"]})
+        return pd.DataFrame({"Category": ["Venue"], "UR)L": ["https://reelvendornetwork.com/venues/"]})
 
 vendor_df = load_vendor_data()
 
-# Helper function to display results
-def show_parts(response):
-    if not response.candidates:
-        st.warning("No response generated.")
-        return
+# Old build_parts
+# # Helper function to display results
+# def show_parts(response):
+#     if not response.candidates:
+#         st.warning("No response generated.")
+#         return
         
-    parts = response.candidates[0].content.parts
-    for part in parts:
-        if part.text:
-            st.markdown(part.text)
+#     parts = response.candidates[0].content.parts
+#     for part in parts:
+#         if part.text:
+#             st.markdown(part.text.replace('$', '\\$')) # Avoids latex formatting issues by ignoring '$' cmd.
+
+def build_parts(response) -> list:
+    if not response.candidates:
+        return ['No response generated.']
+        
+    # Combine all parts into one string
+    full_text = "".join([part.text for part in response.candidates[0].content.parts if part.text])
+
+    # Avoids latex formatting issues by ignoring '$' cmd
+    full_text.replace('$', '\$')  
+
+    # Split by header while keeping the header
+    raw_sections = re.split(r'(?m)^(?=#)', full_text)
+    return [s.strip() for s in raw_sections if s.strip()]
 
     # Grounding metadata (hidden for now)
     # metadata = response.candidates[0].grounding_metadata
@@ -76,7 +92,7 @@ with st.sidebar:
 
         st.subheader("Style & Vision")
 
-        style = st.text_input("Style/Theme", placeholder="e.g. Coastal, Vintage")
+        style = st.text_input("Style/Theme", placeholder="e.g. Coastal, Vintage, Cultural")
         vibe_tags = st.multiselect(
             "Overall Vibe",
             ["Modern", "Romantic", "Cinematic", "Fun", "Luxury", "Classic", "Edgy"]
@@ -127,7 +143,7 @@ if submit_button:
 
     INSTRUCTIONS:
     1. Provide 3 reccomended vendors from {selected_category}s found at {target_link}. 
-        If there are less than 3 available vendors, only list those, do not search the web for more.
+        If there are less than 3 available vendors, only list those. Do not search the web for more.
     2. For each, include: **Vendor Name**, **Summary**, and a **'Why they fit'** section.
     3. Keep it concise. Use Markdown headers for readability.
     4. Only provide links to the actual vendor's website, not on Reel vendor network's website.
@@ -138,6 +154,13 @@ if submit_button:
         with st.spinner(f"Searching {selected_category} options at Reel Vendor Network..."):
             response = generate_response(query,uploaded_pictures)
             st.markdown(f"See more {selected_category}s at {target_link}")
-            show_parts(response)
+
+            text_sections = build_parts(response) # builds part so headers are split into list.
+
+            for section in text_sections:
+                with st.chat_message("ai", avatar=ICON_LINK): # Gives message a chat bubble
+                    # st.write("Hello 👋")
+                    st.markdown(section)
+                
     except Exception as e:
         st.error(f"An error occurred: {e}")

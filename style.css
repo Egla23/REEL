@@ -198,3 +198,39 @@ div[data-baseweb="tooltip"] {
     border: 1px solid #da9982 !important;
 }
 */
+
+/* 1. The main message container */
+[data-testid="stChatMessage"] {
+    background-color: #ffffff !important; /* Your requested white background */
+    border: 1px solid #f0f2f6 !important; /* Subtle light gray border */
+    border-radius: 15px !important;
+    padding: 1rem !important;
+    margin-bottom: 10px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important; /* Optional: adds depth */
+}
+
+/* 2. Target the text inside the bubbles */
+[data-testid="stChatMessageContent"] p,
+[data-testid="stChatMessage"] p {
+    color: #2e2e2e !important; /* Matches widget text color */
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+}
+
+/* 3. Handle the Avatar background */
+/* Streamlit often puts a background color behind the icon; this makes it clean */
+[data-testid="stChatMessageAvatar"] {
+    background-color: transparent !important;
+    border: 1px solid #eee !important;
+}
+
+/* 4. OPTIONAL: Specific styling for the 'User' vs 'Assistant' */
+/* If you want the User's bubble to be a different color later, 
+   Streamlit adds an aria-label we can target: */
+
+/* This targets the USER specifically */
+/*
+[aria-label="Chat message from user"] {
+    background-color: #faefec !important; 
+}
+*/
