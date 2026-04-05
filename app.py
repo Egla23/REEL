@@ -126,10 +126,12 @@ if submit_button:
     - Notes: {notes}
 
     INSTRUCTIONS:
-    1. Provide 3 reccomended vendors from {selected_category}s found at {target_link}.
+    1. Provide 3 reccomended vendors from {selected_category}s found at {target_link}. 
+        If there are less than 3 available vendors, only list those, do not search the web for more.
     2. For each, include: **Vendor Name**, **Summary**, and a **'Why they fit'** section.
     3. Keep it concise. Use Markdown headers for readability.
     4. Only provide links to the actual vendor's website, not on Reel vendor network's website.
+    5. Use markdown text only. You may use math to rationalize a budget but do not use Latex or code snippets.
     """
     print("\n",query)
     try:
