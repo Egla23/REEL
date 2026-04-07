@@ -3,6 +3,7 @@ import pandas as pd # Added for CSV handling
 from datetime import date
 from bot import SYSTEM_INSTRUCTION, MODEL, generate_response 
 import re
+import time
 
 def local_css(file_name):
     with open(file_name) as f:
@@ -143,16 +144,22 @@ if submit_button:
 
     INSTRUCTIONS:
     1. Provide 3 reccomended vendors from {selected_category}s found at {target_link}. 
-        If there are less than 3 available vendors, only list those. Do not search the web for more.
-    2. For each, include: **Vendor Name**, **Summary**, and a **'Why they fit'** section.
-    3. Keep it concise. Use Markdown headers for readability.
-    4. Only provide links to the actual vendor's website, not on Reel vendor network's website.
-    5. Use markdown text only. You may use math to rationalize a budget but do not use Latex or code snippets.
+        1a. If there are less than 3 available vendors, only list those. Do not search the web for more.
+    2. Filter results from the Reel link to only include vendors relevant to the specified location. 
+        2a. If no matches exist, state: "I could not find any Reel vendors serving {location}." 
+        and list the available locations for the vendors on that page.
+    3. For each, include: **Vendor Name**, **Summary**, and a **'Why they fit'** section.
+    4. Keep it concise. Use Markdown headers for each vendor.
+    5. Only provide links to the actual vendor's website, not on Reel vendor network's website.
+    6. Use markdown text only. You may use math to rationalize a budget but do not use Latex or code snippets.
     """
     print("\n",query)
     try:
-        with st.spinner(f"Searching {selected_category} options at Reel Vendor Network..."):
+        with st.status(f"Searching {selected_category} options at Reel Vendor Network..."):
             response = generate_response(query,uploaded_pictures)
+            time.sleep(2)
+            st.write(f"Analyzing {selected_category} based on your needs")
+
             st.markdown(f"See more {selected_category}s at {target_link}")
 
             text_sections = build_parts(response) # builds part so headers are split into list.
@@ -161,6 +168,8 @@ if submit_button:
                 with st.chat_message("ai", avatar=ICON_LINK): # Gives message a chat bubble
                     # st.write("Hello 👋")
                     st.markdown(section)
+
+        
                 
     except Exception as e:
         st.error(f"An error occurred: {e}")
