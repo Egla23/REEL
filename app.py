@@ -177,12 +177,13 @@ if submit_button:
     except Exception as e:
         st.error(f"An error occurred: {e}")
 
-# --- show saved result after reruns ---
 if st.session_state.search_clicked:
     st.markdown(f"See more {selected_category}s at {st.session_state.target_link}")
 
-    # Vendor result
+    # VENDOR RESULT
     text_sections = build_parts(st.session_state.response)
+    # st.session_state.messages.append({"role": "ai", "content": text_sections})
+
     for section in text_sections:
         with st.chat_message("ai", avatar=ICON_LINK):
             st.markdown(section)
@@ -192,9 +193,10 @@ if st.session_state.search_clicked:
         with st.chat_message(message["role"], avatar=ICON_LINK if message["role"] == "ai" else None):
             st.markdown(message["content"])
     
-    # Chat input
+    # CHAT INPUT
     prompt = st.chat_input("Say something")
 
+    # When user inputs a prompt
     if prompt:
         # Save and show user message
         st.session_state.messages.append({"role": "user", "content": prompt})
@@ -204,9 +206,10 @@ if st.session_state.search_clicked:
         # Generate bot response
         response = generate_response(prompt, demo=DEMO_MODE)
 
+        text_sections = build_parts(response)
+
         # Save and show bot response
-        st.session_state.messages.append({"role": "ai", "content": response})
+        st.session_state.messages.append({"role": "ai", "content": text_sections})
         with st.chat_message("ai", avatar=ICON_LINK):
-            text_sections = build_parts(response)
             for section in text_sections:
                 st.markdown(section)

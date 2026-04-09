@@ -31,14 +31,15 @@ tools = [
     {"url_context": {}},
 ]
 
-def generate_response(query: str, images: list = None, demo: bool = False):
-    chat = client.chats.create(
-        model=MODEL, 
-        config=types.GenerateContentConfig(
-            tools=tools,
-            system_instruction=SYSTEM_INSTRUCTION,
-        )
+chat = client.chats.create(
+    model=MODEL, 
+    config=types.GenerateContentConfig(
+        tools=tools,
+        system_instruction=SYSTEM_INSTRUCTION,
     )
+)
+
+def generate_response(query: str, images: list = None, demo: bool = False):
 
     # Start with the text query
     content_list = [query]
@@ -56,7 +57,6 @@ def generate_response(query: str, images: list = None, demo: bool = False):
     else:
         return "Received input"
  
-
 # # For verification, you can inspect the metadata to see which URLs the model retrieved
 # if response.candidates[0].grounding_metadata:
 #     print("\n--- Search Sources ---")
