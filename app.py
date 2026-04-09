@@ -5,16 +5,32 @@ from bot import SYSTEM_INSTRUCTION, MODEL, generate_response
 import re
 import time
 
+# Define session state variables so streamlit remembers chat history
+if "search_clicked" not in st.session_state:
+    st.session_state.search_clicked = False
+
+if "response" not in st.session_state:
+    st.session_state.response = None
+
+if "target_link" not in st.session_state:
+    st.session_state.target_link = None
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# Icon from their website window icon
+ICON_LINK: str = "https://encrypted-tbn2.gstatic.com/faviconV2?url=https://reelvendornetwork.com&client=VFE&size=64&type=FAVICON&fallback_opts=TYPE,SIZE,URL&nfrp=2"
+LOGO_LINK: str = "https://reelvendornetwork.com/wp-content/uploads/2024/09/Gradient-Logo2.png"
+
+# If True, the Gemini bot isn't activated to not waste any credits.
+DEMO_MODE: bool = False 
+
 def local_css(file_name):
     with open(file_name) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
-# --- TITLE ---
-# Icon from their website window icon
-ICON_LINK = "https://encrypted-tbn2.gstatic.com/faviconV2?url=https://reelvendornetwork.com&client=VFE&size=64&type=FAVICON&fallback_opts=TYPE,SIZE,URL&nfrp=2"
-LOGO_LINK = "https://reelvendornetwork.com/wp-content/uploads/2024/09/Gradient-Logo2.png"
-
+    
 st.set_page_config(page_title="Reel Vendor Network", page_icon=ICON_LINK, layout="wide")
+
 # Set style
 with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
@@ -31,23 +47,16 @@ def load_vendor_data():
         df = pd.read_csv("links.csv")
         return df
     except FileNotFoundError:
-        return pd.DataFrame({"Category": ["Venue"], "UR)L": ["https://reelvendornetwork.com/venues/"]})
+        return pd.DataFrame({"Category": ["Venue"], "URL": ["https://reelvendornetwork.com/venues/"]})
 
 vendor_df = load_vendor_data()
 
-# Old build_parts
-# # Helper function to display results
-# def show_parts(response):
-#     if not response.candidates:
-#         st.warning("No response generated.")
-#         return
-        
-#     parts = response.candidates[0].content.parts
-#     for part in parts:
-#         if part.text:
-#             st.markdown(part.text.replace('$', '\\$')) # Avoids latex formatting issues by ignoring '$' cmd.
-
 def build_parts(response) -> list:
+
+    # For demo purposes to not waste API credits
+    if DEMO_MODE: # or if response is str as generate response in demo mode returns str      
+        return [response]
+    
     if not response.candidates:
         return ['No response generated.']
         
@@ -121,11 +130,14 @@ with st.sidebar:
 
 # QUERY  
 if submit_button:
+    st.session_state.search_clicked = True
+    st.session_state.messages = []   # reset chat for new vendor search
+
     # LINK LOOKUP: Find the URL associated with the selection
     target_link = vendor_df[vendor_df["Category"] == selected_category]["URL"].values[0]
 
     # INJECTING THE VALUES TO QUERY: Updated query with specific requirements
-    query = f"""
+    profile_text = f"""
     You are searching specifically for a {selected_category}.
     
     Quietly follow these steps without writing the output:
@@ -153,23 +165,48 @@ if submit_button:
     5. Only provide links to the actual vendor's website, not on Reel vendor network's website.
     6. Use markdown text only. You may use math to rationalize a budget but do not use Latex or code snippets.
     """
-    print("\n",query)
+    print("\n",profile_text)
+
     try:
-        with st.status(f"Searching {selected_category} options at Reel Vendor Network..."):
-            response = generate_response(query,uploaded_pictures)
-            time.sleep(2)
-            st.write(f"Analyzing {selected_category} based on your needs")
-
-            st.markdown(f"See more {selected_category}s at {target_link}")
-
-            text_sections = build_parts(response) # builds part so headers are split into list.
-
-            for section in text_sections:
-                with st.chat_message("ai", avatar=ICON_LINK): # Gives message a chat bubble
-                    # st.write("Hello 👋")
-                    st.markdown(section)
-
-        
-                
+        # can try st.status to recieve updates from gemin
+        # and then             st.write(f"Analyzing {selected_category} based on your needs")
+        with st.spinner(f"Searching {selected_category} options at Reel Vendor Network..."):
+            response = generate_response(profile_text,images=uploaded_pictures,demo=DEMO_MODE) # TODO
+            st.session_state.response = response
+            st.session_state.target_link = target_link
     except Exception as e:
         st.error(f"An error occurred: {e}")
+
+# --- show saved result after reruns ---
+if st.session_state.search_clicked:
+    st.markdown(f"See more {selected_category}s at {st.session_state.target_link}")
+
+    # Vendor result
+    text_sections = build_parts(st.session_state.response)
+    for section in text_sections:
+        with st.chat_message("ai", avatar=ICON_LINK):
+            st.markdown(section)
+
+    # show previous follow-up chat messages
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"], avatar=ICON_LINK if message["role"] == "ai" else None):
+            st.markdown(message["content"])
+    
+    # Chat input
+    prompt = st.chat_input("Say something")
+
+    if prompt:
+        # Save and show user message
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.write(prompt)
+
+        # Generate bot response
+        response = generate_response(prompt, demo=DEMO_MODE)
+
+        # Save and show bot response
+        st.session_state.messages.append({"role": "ai", "content": response})
+        with st.chat_message("ai", avatar=ICON_LINK):
+            text_sections = build_parts(response)
+            for section in text_sections:
+                st.markdown(section)

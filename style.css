@@ -234,3 +234,45 @@ div[data-baseweb="tooltip"] {
     background-color: #faefec !important; 
 }
 */
+
+/* chat input outer container */
+div[data-testid="stChatInput"] {
+    background-color: #faefec !important;
+    border-radius: 12px !important;
+}
+/* inner wrapper(s) */
+div[data-testid="stChatInput"] > div {
+    background: #ffffff !important;
+    border-radius: 14px !important;
+}
+
+div[data-testid="stChatInput"] > div > div {
+    background: #ffffff !important;
+    border-radius: 14px !important;
+}
+/* actual text input area */
+div[data-testid="stChatInput"] textarea,
+div[data-testid="stChatInput"] input {
+    background-color: #ffffff !important;
+    color: #2e2e2e !important;
+}
+
+/* placeholder text */
+div[data-testid="stChatInput"] textarea::placeholder,
+div[data-testid="stChatInput"] input::placeholder {
+    color: #2e2e2e !important;
+    opacity: 0.7 !important;
+}
+
+/* send button icon */
+div[data-testid="stChatInput"] button svg {
+    fill: #ffffff !important;
+    color: #235059 !important;
+    box-shadow: none !important;
+}
+
+/* send button background */
+div[data-testid="stChatInput"] button {
+    background: #235059 !important;
+    border: #235059 !important;
+}
