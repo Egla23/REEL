@@ -5,6 +5,12 @@ from bot import SYSTEM_INSTRUCTION, MODEL, generate_response
 import re
 import time
 
+# For canvas conversion
+from streamlit_drawable_canvas import st_canvas
+import numpy as np
+from PIL import Image
+from io import BytesIO
+
 # Define session state variables so streamlit remembers chat history
 if "search_clicked" not in st.session_state:
     st.session_state.search_clicked = False
@@ -77,6 +83,25 @@ def build_parts(response) -> list:
         # st.caption("Sources & Grounding:")
         # st.markdown(metadata.search_entry_point.rendered_content, unsafe_allow_html=True)
 
+def convert_canvas(canvas) -> Image:
+    """
+    TODO CONVERT TO PNG OR SOMETHING FOR THE MODEL TO READ
+    Takes CanvasResult object
+    """
+    raw_data = canvas.image_data
+
+    # 2. Reshape/Squeeze if it's 4D
+    if raw_data.ndim == 4:
+        # Taking the first image in the batch
+        img_array = raw_data[0].astype(np.uint8)
+    else:
+        img_array = raw_data.astype(np.uint8)
+
+    # 3. Create the Image object (mode 'RGBA')
+    img = Image.fromarray(img_array, 'RGBA')
+
+    return img 
+
 # --- SIDEBAR FORM ---
 with st.sidebar:
     st.logo(LOGO_LINK)
@@ -110,6 +135,8 @@ with st.sidebar:
         
         # st.subheader("Inspiration Photos")
 
+        uploaded_pictures = []
+
         uploaded_pictures = st.file_uploader(
             "Inspiration Photos",
             type=["png", "jpg", "jpeg", "webp"],
@@ -117,10 +144,26 @@ with st.sidebar:
             help="Upload wedding inspiration photos to help guide the vendor search."
         )
 
+        st.write("Or sketch an idea:")
+        canvas_result = st_canvas(
+            stroke_width=3,
+            stroke_color="#000000",
+            background_color="#EEEEEE",
+            height=250, # Scaled down for the sidebar
+            width=250,  # Scaled down for the sidebar
+            drawing_mode="freedraw",
+            key="canvas"
+        )
+        
+        # Give model canvas picture if filled in
+        if canvas_result.json_data is not None and len(canvas_result.json_data.get("objects", [])) > 0:
+            picture = convert_canvas(canvas_result)
+            uploaded_pictures.append(picture)
+
         if uploaded_pictures:
             st.write("Preview:")
             for img in uploaded_pictures:
-                st.image(img, caption=img.name, use_container_width=True)
+                st.image(img, caption=None, use_container_width=True)
 
         st.subheader("Budget & Priorities")
 
@@ -164,26 +207,28 @@ if submit_button:
     4. Keep it concise. Use Markdown headers for each vendor.
     5. Only provide links to the actual vendor's website, not on Reel vendor network's website.
     6. Use markdown text only. You may use math to rationalize a budget but do not use Latex or code snippets.
+    7. If the user adds any image or sketch input, make sure to acknowledge, and comment positivley.
     """
     print("\n",profile_text)
 
-    try:
+    try:    # VENDOR RESULT
         # can try st.status to recieve updates from gemin
         # and then             st.write(f"Analyzing {selected_category} based on your needs")
         with st.spinner(f"Searching {selected_category} options at Reel Vendor Network..."):
             response = generate_response(profile_text,images=uploaded_pictures,demo=DEMO_MODE) # TODO
-            st.session_state.response = response
-            st.session_state.target_link = target_link
+
     except Exception as e:
         st.error(f"An error occurred: {e}")
 
 if st.session_state.search_clicked:
     st.markdown(f"See more {selected_category}s at {st.session_state.target_link}")
 
-    # VENDOR RESULT
     text_sections = build_parts(st.session_state.response)
     # st.session_state.messages.append({"role": "ai", "content": text_sections})
 
+    st.session_state.response = response
+    st.session_state.target_link = target_link
+    
     for section in text_sections:
         with st.chat_message("ai", avatar=ICON_LINK):
             st.markdown(section)
