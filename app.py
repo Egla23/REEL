@@ -29,7 +29,7 @@ ICON_LINK: str = "https://encrypted-tbn2.gstatic.com/faviconV2?url=https://reelv
 LOGO_LINK: str = "https://reelvendornetwork.com/wp-content/uploads/2024/09/Gradient-Logo2.png"
 
 # If True, the Gemini bot isn't activated to not waste any credits.
-DEMO_MODE: bool = False 
+DEMO_MODE: bool = True 
 
 # If chat mode not yet created with memory, create it
 if "chat_session" not in st.session_state:
@@ -40,7 +40,7 @@ MODEL_SESSION = st.session_state.chat_session
 def local_css(file_name):
     with open(file_name) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-    
+
 st.set_page_config(page_title="Reel Vendor Network", page_icon=ICON_LINK, layout="wide")
 
 # Set style
@@ -48,7 +48,6 @@ with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
     
 st.title("Reel Vendor Assistant")
-
 # st.image("https://reelvendornetwork.com/wp-content/uploads/2024/09/Gradient-Logo2.png",width=100)
 
 # --- DATA LOADING ---
@@ -107,6 +106,26 @@ def convert_canvas(canvas) -> Image:
     img = Image.fromarray(img_array, 'RGBA')
 
     return img 
+
+def format_conversation():
+    content = "# Reel Vendor Assistant - Chat History\n\n"
+    
+    # Add the initial search result if it exists
+    if st.session_state.response:
+        content += "## Initial Search Results\n"
+        # Since response might be a complex object, we extract the text
+        if hasattr(st.session_state.response, 'candidates'):
+             full_text = "".join([part.text for part in st.session_state.response.candidates[0].content.parts if part.text])
+             content += full_text + "\n\n"
+    
+    content += "## Follow-up Discussion\n"
+    for msg in st.session_state.messages:
+        role = "Assistant" if msg["role"] == "ai" else "User"
+        # Your AI messages are stored as lists (from build_parts), so join them
+        msg_text = "\n".join(msg["content"]) if isinstance(msg["content"], list) else msg["content"]
+        content += f"**{role}:** {msg_text}\n\n"
+        
+    return content
 
 # --- SIDEBAR FORM ---
 with st.sidebar:
@@ -175,10 +194,25 @@ with st.sidebar:
 
         budget = st.text_input("Budget range for this vendor")
         notes = st.text_area("Special Requests / Deal Breakers")
+
         submit_button = st.form_submit_button("Find My Vendor")
+
+        if st.session_state.search_clicked:
+            chat_log = format_conversation()
+            
+            st.sidebar.download_button(
+                label="💾 Save Conversation",
+                data=chat_log,
+                file_name=f"wedding_vendors_{selected_category}_{date.today()}.md",
+                mime="text/markdown",
+            )
 
 # QUERY  
 if submit_button:
+    if not selected_category: # TODO AND CHECK BOX IS NOT CHECKED.
+        st.error("Please select a vendor category, or select \"make me a wedding\" before searching.")
+        st.stop() # This halts the script so the code below doesn't run
+
     st.session_state.search_clicked = True
     st.session_state.messages = []   # reset chat for new vendor search
 
@@ -262,9 +296,12 @@ if st.session_state.search_clicked:
         response = generate_response(prompt, MODEL_SESSION, demo=DEMO_MODE)
 
         text_sections = build_parts(response)
+        full_response_text = "\n\n".join(text_sections)
 
         # Save and show bot response
-        st.session_state.messages.append({"role": "ai", "content": text_sections})
+        st.session_state.messages.append({"role": "ai", "content": full_response_text})
+
         with st.chat_message("ai", avatar=ICON_LINK):
             for section in text_sections:
                 st.markdown(section)
+        st.rerun()

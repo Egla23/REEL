@@ -51,7 +51,6 @@ def create_model():
     return model
 
 def generate_response(query: str, model, images: list = None, demo: bool = False):
-
     # Start with the text query
     content_list = [query]
 
