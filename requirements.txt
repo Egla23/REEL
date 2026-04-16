@@ -1,4 +1,5 @@
 google-genai 
 python-dotenv 
 streamlit
+streamlit_drawable_canvas
 # Python 3.11
