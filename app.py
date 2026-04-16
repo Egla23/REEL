@@ -10,6 +10,7 @@ from streamlit_drawable_canvas import st_canvas
 import numpy as np
 from PIL import Image
 from io import BytesIO
+import streamlit_antd_components as sac
 
 # Define session state variables so streamlit remembers chat history
 if "search_clicked" not in st.session_state:
@@ -140,18 +141,31 @@ def format_conversation():
 
 # --- SIDEBAR FORM ---
 with st.sidebar:
-    st.logo(LOGO_LINK)
+    # st.logo(LOGO_LINK,size="Large")
+    st.image(LOGO_LINK)
+    
+    # All categories
+    make_wedding = sac.switch(
+        label='Make Me a Wedding', 
+        size='lg', 
+        on_color='#da9982',
+        align='center'
+    )
+    if make_wedding:
+        st.info("We'll plan your wedding for you based on your form! No need to select a vendor.")
 
     with st.form("wedding_criteria"):
-
+        
         st.subheader("Vendor Selection")
-    
+
+        # Single category
         selected_category = st.selectbox(
             label="Select",
             options=vendor_df["Category"].tolist(),
             index=None, # Is a required selection
             placeholder="Select a Vendor",
-            label_visibility="collapsed"
+            label_visibility="collapsed",
+            disabled=make_wedding  # If true, Users must select individual vendors
         )
 
         st.subheader("Basics")
@@ -229,51 +243,87 @@ with st.sidebar:
 
 # QUERY  
 if submit_button:
-    if not selected_category: # TODO AND CHECK BOX IS NOT CHECKED.
+    
+    if not selected_category and make_wedding==False: # TODO AND CHECK BOX IS NOT CHECKED.
         st.error("Please select a vendor category, or select \"make me a wedding\" before searching.")
         st.stop() # This halts the script so the code below doesn't run
 
     st.session_state.search_clicked = True
     st.session_state.messages = []   # reset chat for new vendor search
 
+    if make_wedding:
+        target_links = ", ".join(vendor_df['URL'].astype(str))
+        profile_text = f"""
+        You are a wedding planner.
+
+        Create a full wedding plan using Reel Vendor Network vendors.
+        with the following links {target_links}
+
+        STEP 1: Use the links to find the best vendors.
+        STEP 2: Once you find names, search Google for more details on those specific vendors.
+
+        USER WEDDING PROFILE:
+        - Date: {wedding_date}
+        - Location: {location}
+        - Guest Size: {guest_range}
+        - Style/Vibe: {style} ({', '.join(vibe_tags)})
+        - Budget: {budget}
+        - Notes: {notes}
+
+        INSTRUCTIONS:
+        1. Recommend one vendor per multiple relevant categories based on user requirments 
+        (venue, catering, photography, DJ, etc.)
+        2. Filter results from the Reel link to only include vendors relevant to the specified location. 
+            2a. If no matches exist, state: "I could not find any Reel vendors serving {location}." 
+            and list the available locations for the vendors on that page.
+        3. For each, include: **Vendor Name**, **Summary**, and a **'Why they fit'** section.
+        4. Keep it concise. Use Markdown headers for each vendor.
+        5. Only provide links to the actual vendor's website, not on Reel vendor network's website.
+        6. Use markdown text only. You may use math to rationalize a budget but do not use Latex or code snippets.
+        7. If the user adds any image or sketch input, make sure to acknowledge, and comment positivley.
+        """
+        print(profile_text)
+        st.stop()
+
     # Reset the model session for a fresh start with the new vendor category
     # st.session_state.chat_session = create_model()
 
-    # LINK LOOKUP: Find the URL associated with the selection
-    target_link = vendor_df[vendor_df["Category"] == selected_category]["URL"].values[0]
-    st.session_state.target_link = target_link # Save link to state
+    else: # selected_category
+        # LINK LOOKUP: Find the URL associated with the selection
+        target_link = vendor_df[vendor_df["Category"] == selected_category]["URL"].values[0]
+        st.session_state.target_link = target_link # Save link to state
 
-    # INJECTING THE VALUES TO QUERY: Updated query with specific requirements
-    profile_text = f"""
-    You are searching specifically for a {selected_category}.
-    
-    Quietly follow these steps without writing the output:
-    STEP 1: Use the link {target_link} to find the best {selected_category} vendors.
-    STEP 2: Once you find names, search Google for more details on those specific vendors.
+        # INJECTING THE VALUES TO QUERY: Updated query with specific requirements
+        profile_text = f"""
+        You are searching specifically for a {selected_category}.
+        
+        Quietly follow these steps without writing the output:
+        STEP 1: Use the link {target_link} to find the best {selected_category} vendors.
+        STEP 2: Once you find names, search Google for more details on those specific vendors.
 
-    Use the following wedding profile, if applicable, for more context:
+        Use the following wedding profile, if applicable, for more context:
 
-    USER WEDDING PROFILE:
-    - Date: {wedding_date}
-    - Location: {location}
-    - Guest Size: {guest_range}
-    - Style/Vibe: {style} ({', '.join(vibe_tags)})
-    - Budget: {budget}
-    - Notes: {notes}
+        USER WEDDING PROFILE:
+        - Date: {wedding_date}
+        - Location: {location}
+        - Guest Size: {guest_range}
+        - Style/Vibe: {style} ({', '.join(vibe_tags)})
+        - Budget: {budget}
+        - Notes: {notes}
 
-    INSTRUCTIONS:
-    1. Provide 3 reccomended vendors from {selected_category}s found at {target_link}. 
-        1a. If there are less than 3 available vendors, only list those. Do not search the web for more.
-    2. Filter results from the Reel link to only include vendors relevant to the specified location. 
-        2a. If no matches exist, state: "I could not find any Reel vendors serving {location}." 
-        and list the available locations for the vendors on that page.
-    3. For each, include: **Vendor Name**, **Summary**, and a **'Why they fit'** section.
-    4. Keep it concise. Use Markdown headers for each vendor.
-    5. Only provide links to the actual vendor's website, not on Reel vendor network's website.
-    6. Use markdown text only. You may use math to rationalize a budget but do not use Latex or code snippets.
-    7. If the user adds any image or sketch input, make sure to acknowledge, and comment positivley.
-    """
-    print("\n",profile_text)
+        INSTRUCTIONS:
+        1. Provide 3 reccomended vendors from {selected_category}s found at {target_link}. 
+            1a. If there are less than 3 available vendors, only list those. Do not search the web for more.
+        2. Filter results from the Reel link to only include vendors relevant to the specified location. 
+            2a. If no matches exist, state: "I could not find any Reel vendors serving {location}." 
+            and list the available locations for the vendors on that page.
+        3. For each, include: **Vendor Name**, **Summary**, and a **'Why they fit'** section.
+        4. Keep it concise. Use Markdown headers for each vendor.
+        5. Only provide links to the actual vendor's website, not on Reel vendor network's website.
+        6. Use markdown text only. You may use math to rationalize a budget but do not use Latex or code snippets.
+        7. If the user adds any image or sketch input, make sure to acknowledge, and comment positivley.
+        """
+        print("\n",profile_text)
 
     try:    # VENDOR RESULT
         # can try st.status to recieve updates from gemin
