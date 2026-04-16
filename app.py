@@ -29,7 +29,7 @@ ICON_LINK: str = "https://encrypted-tbn2.gstatic.com/faviconV2?url=https://reelv
 LOGO_LINK: str = "https://reelvendornetwork.com/wp-content/uploads/2024/09/Gradient-Logo2.png"
 
 # If True, the Gemini bot isn't activated to not waste any credits.
-DEMO_MODE: bool = True 
+DEMO_MODE: bool = False 
 
 # If chat mode not yet created with memory, create it
 if "chat_session" not in st.session_state:
@@ -88,24 +88,35 @@ def build_parts(response) -> list:
         # st.caption("Sources & Grounding:")
         # st.markdown(metadata.search_entry_point.rendered_content, unsafe_allow_html=True)
 
-def convert_canvas(canvas) -> Image:
+def convert_canvas(canvas) -> bytes | None:
     """
-    TODO CONVERT TO PNG OR SOMETHING FOR THE MODEL TO READ
-    Takes CanvasResult object
+    Convert Streamlit drawable canvas output into PNG bytes for model input.
+    Returns None if the canvas is empty.
     """
+    if canvas.image_data is None:
+        return None
+
     raw_data = canvas.image_data
 
-    # 2. Reshape/Squeeze if it's 4D
     if raw_data.ndim == 4:
-        # Taking the first image in the batch
         img_array = raw_data[0].astype(np.uint8)
     else:
         img_array = raw_data.astype(np.uint8)
 
-    # 3. Create the Image object (mode 'RGBA')
-    img = Image.fromarray(img_array, 'RGBA')
+    img = Image.fromarray(img_array, "RGBA")
 
-    return img 
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
+
+def uploaded_file_png(uploaded_file) -> bytes:
+    """
+    Convert an uploaded image file to PNG bytes for consistent model input.
+    """
+    img = Image.open(uploaded_file).convert("RGBA")
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
 
 def format_conversation():
     content = "# Reel Vendor Assistant - Chat History\n\n"
@@ -160,34 +171,43 @@ with st.sidebar:
         
         # st.subheader("Inspiration Photos")
 
-        uploaded_pictures = []
-
-        uploaded_pictures = st.file_uploader(
+        uploaded_files = st.file_uploader(
             "Inspiration Photos",
             type=["png", "jpg", "jpeg", "webp"],
             accept_multiple_files=True,
             help="Upload wedding inspiration photos to help guide the vendor search."
         )
 
+        preview_images = []
+        model_images = []
+
+        # Handle uploaded files
+        if uploaded_files:
+            for uploaded_file in uploaded_files:
+                preview_images.append(uploaded_file)
+                model_images.append(uploaded_file_png(uploaded_file))
+
         st.write("Or sketch an idea:")
         canvas_result = st_canvas(
             stroke_width=3,
             stroke_color="#000000",
             background_color="#EEEEEE",
-            height=250, # Scaled down for the sidebar
-            width=250,  # Scaled down for the sidebar
+            height=250,
+            width=250,
             drawing_mode="freedraw",
             key="canvas"
         )
-        
-        # Give model canvas picture if filled in
-        if canvas_result.json_data is not None and len(canvas_result.json_data.get("objects", [])) > 0:
-            picture = convert_canvas(canvas_result)
-            uploaded_pictures.append(picture)
 
-        if uploaded_pictures:
+        # Handle canvas sketch
+        if canvas_result.json_data is not None and len(canvas_result.json_data.get("objects", [])) > 0:
+            canvas_png_bytes = convert_canvas(canvas_result)
+            if canvas_png_bytes is not None:
+                preview_images.append(canvas_png_bytes)
+                model_images.append(canvas_png_bytes)
+
+        if preview_images:
             st.write("Preview:")
-            for img in uploaded_pictures:
+            for img in preview_images:
                 st.image(img, caption=None, use_container_width=True)
 
         st.subheader("Budget & Priorities")
@@ -262,7 +282,7 @@ if submit_button:
             st.session_state.response = generate_response(
                 profile_text, 
                 MODEL_SESSION, 
-                images=uploaded_pictures, 
+                images=model_images, 
                 demo=DEMO_MODE
             )
     except Exception as e:

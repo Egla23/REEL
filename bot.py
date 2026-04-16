@@ -1,7 +1,6 @@
-from google import genai
-from google.genai.types import Tool, GenerateContentConfig
-from google.genai import types
 import os
+from io import BytesIO
+
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
@@ -39,6 +38,45 @@ tools = [
     {"google_search": {}},
     {"url_context": {}},
 ]
+def image_to_part(image_item):
+    """
+    Normalize different image input types into a Gemini Part.
+    Supports:
+    - raw bytes from canvas PNG conversion
+    - PIL Image objects
+    - Streamlit UploadedFile / file-like objects
+    """
+    # Canvas or preprocessed PNG bytes
+    if isinstance(image_item, (bytes, bytearray)):
+        return types.Part.from_bytes(
+            data=image_item,
+            mime_type="image/png"
+        )
+
+    # PIL image
+    if isinstance(image_item, Image.Image):
+        buf = BytesIO()
+        image_item.save(buf, format="PNG")
+        return types.Part.from_bytes(
+            data=buf.getvalue(),
+            mime_type="image/png"
+        )
+
+    # Uploaded file / file-like object
+    if hasattr(image_item, "read"):
+        raw_bytes = image_item.read()
+
+        if hasattr(image_item, "seek"):
+            image_item.seek(0)
+
+        mime_type = getattr(image_item, "type", None) or "image/png"
+
+        return types.Part.from_bytes(
+            data=raw_bytes,
+            mime_type=mime_type
+        )
+
+    raise TypeError(f"Unsupported image input type: {type(image_item)}")
 
 def create_model():
     model = client.chats.create(
@@ -51,21 +89,17 @@ def create_model():
     return model
 
 def generate_response(query: str, model, images: list = None, demo: bool = False):
-    # Start with the text query
     content_list = [query]
 
-    if demo == False:
-        if images:
-            for uploaded_file in images:
-                # Open the Byte stream as a PIL Image object
-                img = Image.open(uploaded_file)
-                content_list.append(img)
-
-        # Send the list (contains 1 string and N images)
-        response = model.send_message(message=content_list)
-        return response
-    else:
+    if demo:
         return "Received input"
+
+    if images:
+        for image_item in images:
+            content_list.append(image_to_part(image_item))
+
+    response = model.send_message(message=content_list)
+    return response
  
 # # For verification, you can inspect the metadata to see which URLs the model retrieved
 # if response.candidates[0].grounding_metadata:
