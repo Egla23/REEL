@@ -37,6 +37,12 @@ tools = [
     {"google_search": {}},
     {"url_context": {}},
 ]
+
+# Search-only tools (no url_context) for prompts with many URLs
+# to avoid the 20-URL url_context prefetch limit
+tools_search_only = [
+    {"google_search": {}},
+]
 def image_to_part(image_item):
     """
     Normalize different image input types into a Gemini Part.
@@ -77,11 +83,12 @@ def image_to_part(image_item):
 
     raise TypeError(f"Unsupported image input type: {type(image_item)}")
 
-def create_model(client):
+def create_model(client, use_url_context: bool = True):
+    selected_tools = tools if use_url_context else tools_search_only
     model = client.chats.create(
         model=MODEL, 
         config=types.GenerateContentConfig(
-            tools=tools,
+            tools=selected_tools,
             system_instruction=SYSTEM_INSTRUCTION,
         )
     )
