@@ -30,8 +30,7 @@ You may only talk about Reel Vendor Network and their wedding vendors. If the us
 such as "The Knot", highlight Reel Vendor Network as the best in the region.
 """
 
-# Initialize the client
-client = genai.Client(api_key=gemini_api_key, http_options={'api_version': 'v1alpha'})
+# client = genai.Client(api_key=gemini_api_key, http_options={'api_version': 'v1alpha'})
 MODEL = "gemini-2.5-flash"
 
 tools = [
@@ -78,7 +77,7 @@ def image_to_part(image_item):
 
     raise TypeError(f"Unsupported image input type: {type(image_item)}")
 
-def create_model():
+def create_model(client):
     model = client.chats.create(
         model=MODEL, 
         config=types.GenerateContentConfig(
@@ -88,17 +87,15 @@ def create_model():
     )
     return model
 
-def generate_response(query: str, model, images: list = None, demo: bool = False):
+def generate_response(query: str, chat_session, images: list = None, demo: bool = False):
     content_list = [query]
-
     if demo:
         return "Received input"
-
     if images:
         for image_item in images:
             content_list.append(image_to_part(image_item))
 
-    response = model.send_message(message=content_list)
+    response = chat_session.send_message(message=content_list)
     return response
  
 # # For verification, you can inspect the metadata to see which URLs the model retrieved

@@ -4,6 +4,7 @@ from datetime import date
 from bot import SYSTEM_INSTRUCTION, MODEL, generate_response, create_model 
 import re
 import time
+from google import genai
 
 # For canvas conversion
 from streamlit_drawable_canvas import st_canvas
@@ -12,31 +13,9 @@ from PIL import Image
 from io import BytesIO
 import streamlit_antd_components as sac
 
-# Define session state variables so streamlit remembers chat history
-if "search_clicked" not in st.session_state:
-    st.session_state.search_clicked = False
-
-if "response" not in st.session_state:
-    st.session_state.response = None
-
-if "target_link" not in st.session_state:
-    st.session_state.target_link = None
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
 # Icon from their website window icon
 ICON_LINK: str = "https://encrypted-tbn2.gstatic.com/faviconV2?url=https://reelvendornetwork.com&client=VFE&size=64&type=FAVICON&fallback_opts=TYPE,SIZE,URL&nfrp=2"
 LOGO_LINK: str = "https://reelvendornetwork.com/wp-content/uploads/2024/09/Gradient-Logo2.png"
-
-# If True, the Gemini bot isn't activated to not waste any credits.
-DEMO_MODE: bool = False 
-
-# If chat mode not yet created with memory, create it
-if "chat_session" not in st.session_state:
-    st.session_state.chat_session = create_model()
-
-MODEL_SESSION = st.session_state.chat_session
 
 def local_css(file_name):
     with open(file_name) as f:
@@ -50,6 +29,12 @@ with open("style.css") as f:
     
 st.title("Reel Vendor Assistant")
 # st.image("https://reelvendornetwork.com/wp-content/uploads/2024/09/Gradient-Logo2.png",width=100)
+# Cached function to manage the AI client lifecycle
+
+@st.cache_resource
+def get_client():
+    from bot import gemini_api_key
+    return genai.Client(api_key=gemini_api_key, http_options={'api_version': 'v1alpha'})
 
 # --- DATA LOADING ---
 @st.cache_data
@@ -138,6 +123,27 @@ def format_conversation():
         content += f"**{role}:** {msg_text}\n\n"
         
     return content
+
+# Define session state variables so streamlit remembers chat history
+if "search_clicked" not in st.session_state:
+    st.session_state.search_clicked = False
+
+if "response" not in st.session_state:
+    st.session_state.response = None
+
+if "target_link" not in st.session_state:
+    st.session_state.target_link = None
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+if "chat_session" not in st.session_state:
+    client = get_client() # Get the persistent client
+    st.session_state.chat_session = create_model(client) # Pass it to create_model
+
+# If True, the Gemini bot isn't activated to not waste any credits.
+DEMO_MODE: bool = False
+MODEL_SESSION = st.session_state.chat_session
 
 # --- SIDEBAR FORM ---
 with st.sidebar:
@@ -244,14 +250,23 @@ with st.sidebar:
 # QUERY  
 if submit_button:
     
-    if not selected_category and make_wedding==False: # TODO AND CHECK BOX IS NOT CHECKED.
+    if not selected_category and make_wedding==False:
         st.error("Please select a vendor category, or select \"make me a wedding\" before searching.")
         st.stop() # This halts the script so the code below doesn't run
+
+    # Reset the model session for a fresh start with the new vendor category
+    # st.session_state.chat_session = create_model(get_client()) # Pass cached client
+    # MODEL_SESSION = st.session_state.chat_session
 
     st.session_state.search_clicked = True
     st.session_state.messages = []   # reset chat for new vendor search
 
     if make_wedding:
+        # For spinner, because these are undefined when user selects make_wedding
+        selected_category = "vendor"
+        st.session_state.target_link = "https://reelvendornetwork.com/"
+
+        # For prompt
         target_links = ", ".join(vendor_df['URL'].astype(str))
         profile_text = f"""
         You are a wedding planner.
@@ -272,7 +287,7 @@ if submit_button:
 
         INSTRUCTIONS:
         1. Recommend one vendor per multiple relevant categories based on user requirments 
-        (venue, catering, photography, DJ, etc.)
+        (venue, catering, photography, DJ, etc.) with a maximum of 5 vendors total, one per each category.
         2. Filter results from the Reel link to only include vendors relevant to the specified location. 
             2a. If no matches exist, state: "I could not find any Reel vendors serving {location}." 
             and list the available locations for the vendors on that page.
@@ -283,10 +298,6 @@ if submit_button:
         7. If the user adds any image or sketch input, make sure to acknowledge, and comment positivley.
         """
         print(profile_text)
-        st.stop()
-
-    # Reset the model session for a fresh start with the new vendor category
-    # st.session_state.chat_session = create_model()
 
     else: # selected_category
         # LINK LOOKUP: Find the URL associated with the selection
@@ -325,8 +336,9 @@ if submit_button:
         """
         print("\n",profile_text)
 
-    try:    # VENDOR RESULT
-        # can try st.status to recieve updates from gemin
+    # --- VENDOR RESULT ---
+    try:    
+        # can try st.status to recieve updates from gemini
         # and then st.write(f"Analyzing {selected_category} based on your needs")
         with st.spinner(f"Searching {selected_category} options at Reel Vendor Network..."):
             st.session_state.response = generate_response(
@@ -338,6 +350,7 @@ if submit_button:
     except Exception as e:
         st.error(f"An error occurred: {e}")
 
+# If user clicks "Find my Vendor" enable chat functionality.
 if st.session_state.search_clicked:
     st.markdown(f"See more {selected_category}s at {st.session_state.target_link}")
 
@@ -352,7 +365,7 @@ if st.session_state.search_clicked:
         with st.chat_message(message["role"], avatar=ICON_LINK if message["role"] == "ai" else None):
             st.markdown(message["content"])
     
-    # CHAT INPUT
+    # --- CHAT INPUT ---
     prompt = st.chat_input("Say something")
 
     # When user inputs a prompt
