@@ -126,7 +126,7 @@ def render_sidebar(vendor_df):
                     file_name=f"wedding_vendors_{selected_category}_{date.today()}.md",
                     mime="text/markdown",
                 )
-            st.sidebar.caption("Created by Sonya Cheteyan, Egla Mekkonen, Ibrahim Sinyan\n© 2026 Reel Vendor Network")
+            st.sidebar.caption("Created by Sonya Cheteyan, Egla Mekonnen, Ibrahim Sinyan\n© 2026 Reel Vendor Network")
 
     return {
         "submit_button": submit_button,
