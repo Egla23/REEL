@@ -2,7 +2,5 @@ google-genai
 python-dotenv 
 streamlit
 streamlit_drawable_canvas
-
-# custom widgets
-streamlit-antd-components
+streamlit-antd-components # custom widgets
 # Python 3.11
