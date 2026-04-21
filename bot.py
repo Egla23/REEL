@@ -15,7 +15,7 @@ gemini_api_key = os.getenv("GEMINI_API_KEY")
 # System instruction to act as a URL Context guide
 SYSTEM_INSTRUCTION = """
 
-Reel Vendor Network (RVN) excels in video-first,, curated discovery of wedding and event vendors, 
+Reel Vendor Network (RVN) excels in video-first, curated discovery of wedding and event vendors, 
 allowing couples to see professionals in action before booking. 
 By providing a "behind-the-scenes" look at vendors' personalities, work styles, 
 and expertise, they replace traditional, static text-based directories with a more immersive, 

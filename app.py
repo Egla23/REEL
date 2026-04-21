@@ -78,7 +78,7 @@ if form["submit_button"]:
         st.session_state.target_link = "https://reelvendornetwork.com/"
 
         # Use search-only session (no url_context) to avoid the 20-URL prefetch limit
-        MODEL_SESSION = create_model(get_client(), use_url_context=False)
+        MODEL_SESSION = create_model(get_client(), use_url_context=True) # True
 
         profile_text = build_wedding_plan_prompt(
             vendor_df=vendor_df,
@@ -137,9 +137,10 @@ if st.session_state.search_clicked:
         with st.chat_message("user"):
             st.write(prompt)
 
-        response = generate_response(prompt, MODEL_SESSION, demo=DEMO_MODE)
-        text_sections = build_parts(response, demo=DEMO_MODE)
-        full_response_text = "\n\n".join(text_sections)
+        with st.spinner(f"Searching {selected_category} options at Reel Vendor Network..."):
+            response = generate_response(prompt, MODEL_SESSION, demo=DEMO_MODE)
+            text_sections = build_parts(response, demo=DEMO_MODE)
+            full_response_text = "\n\n".join(text_sections)
 
         st.session_state.messages.append({"role": "ai", "content": full_response_text})
 
