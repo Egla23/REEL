@@ -30,3 +30,12 @@ The application is highly modularized for clean execution and easy scalability:
 ```bash
 git clone [https://github.com/yourusername/your-repo-name.git](https://github.com/yourusername/your-repo-name.git)
 cd your-repo-name
+
+2. Install Dependencies
+Install the required packages using pip:
+
+Bash
+pip install -r requirements.txt
+
+4. Run the Application
+streamlit run app.py
